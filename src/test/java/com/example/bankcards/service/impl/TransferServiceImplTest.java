@@ -101,4 +101,49 @@ class TransferServiceImplTest {
         verify(cardRepository, times(1)).save(toCard);
         verify(transactionRepository, times(1)).save(any(CardTransaction.class));
     }
+
+    @Test
+    void transferFails_whenInsufficientFunds() {
+        Long userId = 1L;
+        Long fromCardId = 10L;
+        Long toCardId = 20L;
+
+        User user = new User();
+        user.setId(userId);
+
+        Card fromCard = new Card();
+        fromCard.setId(fromCardId);
+        fromCard.setUser(user);
+        fromCard.setBalance(new BigDecimal("50.00"));
+        fromCard.setStatus(CardStatus.ACTIVE);
+
+        Card toCard = new Card();
+        toCard.setId(toCardId);
+        toCard.setUser(user);
+        toCard.setBalance(new BigDecimal("100.00"));
+        toCard.setStatus(CardStatus.ACTIVE);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(cardRepository.findByIdAndUser(fromCardId, user)).thenReturn(Optional.of(fromCard));
+        when(cardRepository.findByIdAndUser(toCardId, user)).thenReturn(Optional.of(toCard));
+
+        TransferRequestDto request = new TransferRequestDto(
+                fromCardId,
+                toCardId,
+                new BigDecimal("200.00"), // пытаемся перевести больше, чем есть
+                "Big transfer"
+        );
+
+        BusinessException exception = assertThrows(
+                BusinessException.class,
+                () -> transferService.transferBetweenUserCards(userId, request)
+        );
+
+        assertEquals("Insufficient funds on source card", exception.getMessage());
+
+        // убеждаемся, что НЕ происходило сохранения
+        verify(cardRepository, never()).save(any(Card.class));
+        verify(transactionRepository, never()).save(any());
+    }
+
 }
