@@ -1,1 +1,517 @@
-# Здесь будет OpenAPI описание всех доступных эндпоинтов и моделей данных.
+openapi: 3.0.3
+info:
+  title: Bank Cards Management API
+  version: 1.0.0
+  description: >
+    REST API для системы управления банковскими картами.
+    Аутентификация по JWT, роли ADMIN/USER, шифрование номера карты, переводы между своими картами.
+
+servers:
+  - url: http://localhost:8080
+    description: Local dev server
+
+tags:
+  - name: Auth
+    description: Аутентификация и получение JWT
+  - name: Admin Cards
+    description: Управление картами (роль ADMIN)
+  - name: Admin Transactions
+    description: История всех транзакций (роль ADMIN)
+  - name: User Cards
+    description: Работа с картами пользователя (роль USER)
+  - name: User Transactions
+    description: История транзакций пользователя (роль USER)
+
+paths:
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Вход в систему и получение JWT-токена
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRequest'
+      responses:
+        '200':
+          description: Успешная аутентификация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /api/admin/cards:
+    post:
+      tags: [Admin Cards]
+      summary: Создать карту для пользователя
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CardCreateRequest'
+      responses:
+        '201':
+          description: Карта успешно создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardResponse'
+        '400':
+          description: Ошибка валидации или бизнес-ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Неавторизован
+        '403':
+          description: Нет прав (нужна роль ADMIN)
+    get:
+      tags: [Admin Cards]
+      summary: Список всех карт (ADMIN)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 0
+          description: Номер страницы (0..N)
+        - in: query
+          name: size
+          schema:
+            type: integer
+            minimum: 1
+          description: Размер страницы
+      responses:
+        '200':
+          description: Список карт
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageCardResponse'
+        '401':
+          description: Неавторизован
+        '403':
+          description: Нет прав (нужна роль ADMIN)
+
+  /api/admin/cards/{id}/status:
+    patch:
+      tags: [Admin Cards]
+      summary: Изменить статус карты
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CardStatusUpdateRequest'
+      responses:
+        '200':
+          description: Обновлённая карта
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardResponse'
+        '400':
+          description: Ошибка валидации/бизнес-ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Карта не найдена
+
+  /api/admin/cards/{id}:
+    delete:
+      tags: [Admin Cards]
+      summary: Удалить карту
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Карта удалена
+        '400':
+          description: Нельзя удалить (есть транзакции и т.п.)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Карта не найдена
+
+  /api/admin/transactions:
+    get:
+      tags: [Admin Transactions]
+      summary: История всех транзакций (ADMIN)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 0
+        - in: query
+          name: size
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Список транзакций
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageTransferResponse'
+        '401':
+          description: Неавторизован
+        '403':
+          description: Нет прав (ADMIN)
+
+  /api/user/cards:
+    get:
+      tags: [User Cards]
+      summary: Список карт пользователя
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: userId
+          required: true
+          schema:
+            type: integer
+          description: ID пользователя (в тестовом задании передаётся явно)
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 0
+        - in: query
+          name: size
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Список карт пользователя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageCardResponse'
+        '401':
+          description: Неавторизован
+
+  /api/user/cards/transfer:
+    post:
+      tags: [User Cards]
+      summary: Перевод между своими картами
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: userId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferRequest'
+      responses:
+        '201':
+          description: Успешный перевод
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferResponse'
+        '400':
+          description: Ошибка валидации или бизнес-ошибка (недостаточно средств и т.п.)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Неавторизован
+
+  /api/user/cards/{cardId}/block:
+    post:
+      tags: [User Cards]
+      summary: Запрос блокировки карты пользователем
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: cardId
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: userId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Карта помечена как заблокированная/ожидает блокировки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardResponse'
+        '400':
+          description: Ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Неавторизован
+
+  /api/user/transactions:
+    get:
+      tags: [User Transactions]
+      summary: История транзакций пользователя
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: userId
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 0
+        - in: query
+          name: size
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Список транзакций пользователя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageTransferResponse'
+        '401':
+          description: Неавторизован
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    AuthRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          example: admin@test
+        password:
+          type: string
+          example: password
+      required: [username, password]
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT access token
+      required: [token]
+
+    CardCreateRequest:
+      type: object
+      properties:
+        userId:
+          type: integer
+          example: 1
+        rawCardNumber:
+          type: string
+          example: "4111111111111111"
+        cardholderName:
+          type: string
+          example: "TEST USER"
+        expiryDate:
+          type: string
+          format: date
+          example: "2030-12-31"
+        initialBalance:
+          type: number
+          format: double
+          example: 1000.00
+      required:
+        - userId
+        - rawCardNumber
+        - cardholderName
+        - expiryDate
+        - initialBalance
+
+    CardStatusUpdateRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ACTIVE, BLOCKED, EXPIRED]
+      required: [status]
+
+    CardResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        maskedCardNumber:
+          type: string
+          example: "**** **** **** 1234"
+        cardholderName:
+          type: string
+          example: "TEST USER"
+        expiryDate:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [ACTIVE, BLOCKED, EXPIRED]
+        balance:
+          type: number
+          format: double
+      required:
+        - id
+        - maskedCardNumber
+        - cardholderName
+        - expiryDate
+        - status
+        - balance
+
+    TransferRequest:
+      type: object
+      properties:
+        fromCardId:
+          type: integer
+          example: 1
+        toCardId:
+          type: integer
+          example: 2
+        amount:
+          type: number
+          format: double
+          example: 100.00
+        description:
+          type: string
+          example: "Test transfer"
+      required:
+        - fromCardId
+        - toCardId
+        - amount
+
+    TransferResponse:
+      type: object
+      properties:
+        transactionId:
+          type: integer
+        fromCardId:
+          type: integer
+        toCardId:
+          type: integer
+        amount:
+          type: number
+          format: double
+        status:
+          type: string
+          enum: [SUCCESS, FAILED]
+        createdAt:
+          type: string
+          format: date-time
+        description:
+          type: string
+      required:
+        - transactionId
+        - fromCardId
+        - toCardId
+        - amount
+        - status
+        - createdAt
+
+    PageCardResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/CardResponse'
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+        number:
+          type: integer
+        size:
+          type: integer
+
+    PageTransferResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransferResponse'
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+        number:
+          type: integer
+        size:
+          type: integer
+
+    ApiError:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties:
+            type: string
+      required:
+        - timestamp
+        - status
+        - message
