@@ -12,4 +12,7 @@ public interface TransferService {
 
     Page<TransferResponseDto> getUserTransactions(Long userId, Pageable pageable);
 
+    Page<TransferResponseDto> getAllTransactions(Pageable pageable);
+
+
 }

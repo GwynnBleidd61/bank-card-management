@@ -105,4 +105,19 @@ public class TransferServiceImpl implements TransferService {
                 ));
     }
 
+    @Override
+    public Page<TransferResponseDto> getAllTransactions(Pageable pageable) {
+        return transactionRepository.findAll(pageable)
+                .map(tx -> new TransferResponseDto(
+                        tx.getId(),
+                        tx.getFromCard().getId(),
+                        tx.getToCard().getId(),
+                        tx.getAmount(),
+                        tx.getStatus(),
+                        tx.getCreatedAt(),
+                        tx.getDescription()
+                ));
+    }
+
+
 }
