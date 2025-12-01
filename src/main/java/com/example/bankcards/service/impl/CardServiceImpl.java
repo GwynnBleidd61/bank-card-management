@@ -11,6 +11,9 @@ import com.example.bankcards.service.CardService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -71,6 +74,13 @@ public class CardServiceImpl implements CardService {
         Card saved = cardRepository.save(card);
         return toDto(saved);
     }
+
+    @Override
+    public Page<CardResponseDto> getAllCards(Pageable pageable) {
+        return cardRepository.findAll(pageable)
+                .map(this::toDto);
+    }
+
 
     private CardResponseDto toDto(Card card) {
         // decryptedNumber пока имитируем: берем последние 4 цифры из зашифрованного

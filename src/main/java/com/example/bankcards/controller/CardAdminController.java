@@ -14,6 +14,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.web.bind.annotation.GetMapping;
+
 
 @RestController
 @RequestMapping("/api/admin/cards")
@@ -36,5 +40,11 @@ public class CardAdminController {
         CardResponseDto response = cardService.updateStatus(id, request);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping
+    public Page<CardResponseDto> getAllCards(Pageable pageable) {
+        return cardService.getAllCards(pageable);
+    }
+
 
 }

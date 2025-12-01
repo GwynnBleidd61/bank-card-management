@@ -4,6 +4,10 @@ import com.example.bankcards.dto.CardCreateRequestDto;
 import com.example.bankcards.dto.CardResponseDto;
 import com.example.bankcards.dto.CardStatusUpdateRequestDto;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+
 
 public interface CardService {
 
@@ -14,4 +18,7 @@ public interface CardService {
     String encryptCardNumber(String rawNumber);
 
     CardResponseDto updateStatus(Long cardId, CardStatusUpdateRequestDto dto);
+
+    Page<CardResponseDto> getAllCards(Pageable pageable);
+
 }
