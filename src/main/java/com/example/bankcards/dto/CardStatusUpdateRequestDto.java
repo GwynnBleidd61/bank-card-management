@@ -5,7 +5,6 @@ import jakarta.validation.constraints.NotNull;
 
 public record CardStatusUpdateRequestDto(
 
-        @NotNull
+        @NotNull(message = "Status is required")
         CardStatus status
-) {
-}
+) { }

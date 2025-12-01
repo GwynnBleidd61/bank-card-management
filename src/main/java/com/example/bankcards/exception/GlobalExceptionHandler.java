@@ -2,8 +2,10 @@ package com.example.bankcards.exception;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolationException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -13,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -35,6 +38,12 @@ public class GlobalExceptionHandler {
         return buildError(HttpStatus.BAD_REQUEST, "Validation failed", validationErrors);
     }
 
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiErrorResponse> handleBadBody(HttpMessageNotReadableException ex) {
+        log.warn("Invalid request body", ex);
+        return buildError(HttpStatus.BAD_REQUEST, "Request body is invalid or missing", null);
+    }
+
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ApiErrorResponse> handleConstraintViolation(ConstraintViolationException ex) {
         Map<String, String> validationErrors = new HashMap<>();
@@ -49,9 +58,10 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleOther(Exception ex) {
-        // в проде лучше логировать стек-трейс
+        log.error("Unhandled exception", ex); // теперь стек будет в консоли
         return buildError(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", null);
     }
+
 
     private ResponseEntity<ApiErrorResponse> buildError(HttpStatus status,
                                                         String message,

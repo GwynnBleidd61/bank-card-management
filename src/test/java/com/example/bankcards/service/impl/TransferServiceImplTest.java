@@ -7,10 +7,8 @@ import com.example.bankcards.exception.BusinessException;
 import com.example.bankcards.repository.CardRepository;
 import com.example.bankcards.repository.CardTransactionRepository;
 import com.example.bankcards.repository.UserRepository;
-import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

@@ -35,13 +35,14 @@ public class UserCardController {
     }
 
     @PostMapping("/transfer")
-    public ResponseEntity<TransferResponseDto> transferBetweenUserCards(
+    public ResponseEntity<TransferResponseDto> transferBetweenCards(
             @RequestParam Long userId,
             @Valid @RequestBody TransferRequestDto request
     ) {
         TransferResponseDto response = transferService.transferBetweenUserCards(userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
 
     @PostMapping("/{cardId}/block")
     public ResponseEntity<Void> requestBlockCard(
