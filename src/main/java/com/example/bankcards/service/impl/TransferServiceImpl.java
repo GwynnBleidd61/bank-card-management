@@ -16,6 +16,9 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -84,4 +87,22 @@ public class TransferServiceImpl implements TransferService {
                 savedTx.getDescription()
         );
     }
+
+    @Override
+    public Page<TransferResponseDto> getUserTransactions(Long userId, Pageable pageable) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        return transactionRepository.findByUser(user, pageable)
+                .map(tx -> new TransferResponseDto(
+                        tx.getId(),
+                        tx.getFromCard().getId(),
+                        tx.getToCard().getId(),
+                        tx.getAmount(),
+                        tx.getStatus(),
+                        tx.getCreatedAt(),
+                        tx.getDescription()
+                ));
+    }
+
 }
