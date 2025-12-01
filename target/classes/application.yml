@@ -27,3 +27,8 @@ app:
   crypto:
     secret-key: "my-super-secret-key-1234567890!!"
 
+  jwt:
+    secret: "my-jwt-secret-key-1234567890!!abcd"
+    expiration-ms: 3600000
+
+
