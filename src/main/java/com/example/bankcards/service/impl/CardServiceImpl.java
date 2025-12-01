@@ -5,10 +5,12 @@ import com.example.bankcards.dto.CardResponseDto;
 import com.example.bankcards.entity.Card;
 import com.example.bankcards.entity.CardStatus;
 import com.example.bankcards.entity.User;
+import com.example.bankcards.exception.BusinessException;
 import com.example.bankcards.repository.CardRepository;
 import com.example.bankcards.repository.UserRepository;
 import com.example.bankcards.service.CardService;
 import jakarta.persistence.EntityNotFoundException;
+import com.example.bankcards.repository.CardTransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
@@ -28,6 +30,7 @@ public class CardServiceImpl implements CardService {
 
     private final CardRepository cardRepository;
     private final UserRepository userRepository;
+    private final CardTransactionRepository transactionRepository;
     private final CryptoService cryptoService;
 
 
@@ -92,6 +95,22 @@ public class CardServiceImpl implements CardService {
         return cardRepository.findByUser(user, pageable)
                 .map(this::toDto);
     }
+
+    @Override
+    public void deleteCard(Long cardId) {
+        Card card = cardRepository.findById(cardId)
+                .orElseThrow(() -> new EntityNotFoundException("Card not found"));
+
+        boolean hasOutgoing = transactionRepository.existsByFromCard(card);
+        boolean hasIncoming = transactionRepository.existsByToCard(card);
+
+        if (hasOutgoing || hasIncoming) {
+            throw new BusinessException("Cannot delete card with existing transactions");
+        }
+
+        cardRepository.delete(card);
+    }
+
 
     private CardResponseDto toDto(Card card) {
         String decrypted = cryptoService.decrypt(card.getCardNumberEncrypted());

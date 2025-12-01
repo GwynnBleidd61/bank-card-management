@@ -24,4 +24,6 @@ public interface CardService {
 
     Page<CardResponseDto> getUserCards(Long userId, Pageable pageable);
 
+    void deleteCard(Long cardId);
+
 }
