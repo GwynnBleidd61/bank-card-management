@@ -3,6 +3,9 @@ package com.example.bankcards.controller;
 import com.example.bankcards.dto.CardCreateRequestDto;
 import com.example.bankcards.dto.CardResponseDto;
 import com.example.bankcards.service.CardService;
+import com.example.bankcards.dto.CardStatusUpdateRequestDto;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PatchMapping;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -24,4 +27,14 @@ public class CardAdminController {
         CardResponseDto response = cardService.createCard(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<CardResponseDto> updateCardStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody CardStatusUpdateRequestDto request
+    ) {
+        CardResponseDto response = cardService.updateStatus(id, request);
+        return ResponseEntity.ok(response);
+    }
+
 }

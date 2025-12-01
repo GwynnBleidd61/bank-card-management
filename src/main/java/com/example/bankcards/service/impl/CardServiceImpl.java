@@ -15,6 +15,9 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.example.bankcards.dto.CardStatusUpdateRequestDto;
+
+
 @Service
 @RequiredArgsConstructor
 public class CardServiceImpl implements CardService {
@@ -57,6 +60,18 @@ public class CardServiceImpl implements CardService {
         return "ENC(" + rawNumber + ")"; // временная заглушка
     }
 
+    @Override
+    public CardResponseDto updateStatus(Long cardId, CardStatusUpdateRequestDto dto) {
+        Card card = cardRepository.findById(cardId)
+                .orElseThrow(() -> new EntityNotFoundException("Card not found"));
+
+        card.setStatus(dto.status());
+        card.setUpdatedAt(LocalDateTime.now());
+
+        Card saved = cardRepository.save(card);
+        return toDto(saved);
+    }
+
     private CardResponseDto toDto(Card card) {
         // decryptedNumber пока имитируем: берем последние 4 цифры из зашифрованного
         String fakeDecrypted = card.getCardNumberEncrypted()
@@ -72,4 +87,5 @@ public class CardServiceImpl implements CardService {
                 card.getBalance()
         );
     }
+
 }
