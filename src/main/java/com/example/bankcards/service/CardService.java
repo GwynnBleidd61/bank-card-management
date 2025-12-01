@@ -26,4 +26,6 @@ public interface CardService {
 
     void deleteCard(Long cardId);
 
+    void requestCardBlock(Long userId, Long cardId);
+
 }

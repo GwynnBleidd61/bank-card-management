@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PathVariable;
+
 
 @RestController
 @RequestMapping("/api/user/cards")
@@ -40,5 +42,15 @@ public class UserCardController {
         TransferResponseDto response = transferService.transferBetweenUserCards(userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
+    @PostMapping("/{cardId}/block")
+    public ResponseEntity<Void> requestBlockCard(
+            @RequestParam Long userId,
+            @PathVariable Long cardId
+    ) {
+        cardService.requestCardBlock(userId, cardId);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build(); // 204
+    }
+
 
 }

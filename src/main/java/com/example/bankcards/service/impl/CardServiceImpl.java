@@ -18,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import com.example.bankcards.dto.CardStatusUpdateRequestDto;
 import com.example.bankcards.service.CryptoService;
 
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -110,6 +111,24 @@ public class CardServiceImpl implements CardService {
 
         cardRepository.delete(card);
     }
+
+    @Override
+    public void requestCardBlock(Long userId, Long cardId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        Card card = cardRepository.findByIdAndUser(cardId, user)
+                .orElseThrow(() -> new BusinessException("Card not found or does not belong to user"));
+
+        if (card.getStatus() == CardStatus.BLOCKED) {
+            throw new BusinessException("Card is already blocked");
+        }
+
+        card.setStatus(CardStatus.BLOCKED);
+        card.setUpdatedAt(java.time.LocalDateTime.now());
+        cardRepository.save(card);
+    }
+
 
 
     private CardResponseDto toDto(Card card) {
