@@ -81,6 +81,14 @@ public class CardServiceImpl implements CardService {
                 .map(this::toDto);
     }
 
+    @Override
+    public Page<CardResponseDto> getUserCards(Long userId, Pageable pageable) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        return cardRepository.findByUser(user, pageable)
+                .map(this::toDto);
+    }
 
     private CardResponseDto toDto(Card card) {
         // decryptedNumber пока имитируем: берем последние 4 цифры из зашифрованного

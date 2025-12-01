@@ -19,6 +19,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
 
 
+
+
 @RestController
 @RequestMapping("/api/admin/cards")
 @RequiredArgsConstructor
@@ -45,6 +47,4 @@ public class CardAdminController {
     public Page<CardResponseDto> getAllCards(Pageable pageable) {
         return cardService.getAllCards(pageable);
     }
-
-
 }

@@ -6,7 +6,8 @@ import com.example.bankcards.dto.CardStatusUpdateRequestDto;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 
 public interface CardService {
@@ -20,5 +21,7 @@ public interface CardService {
     CardResponseDto updateStatus(Long cardId, CardStatusUpdateRequestDto dto);
 
     Page<CardResponseDto> getAllCards(Pageable pageable);
+
+    Page<CardResponseDto> getUserCards(Long userId, Pageable pageable);
 
 }
