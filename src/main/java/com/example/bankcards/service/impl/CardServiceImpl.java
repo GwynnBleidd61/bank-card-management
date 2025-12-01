@@ -13,12 +13,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-
+import com.example.bankcards.dto.CardStatusUpdateRequestDto;
+import com.example.bankcards.service.CryptoService;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import com.example.bankcards.dto.CardStatusUpdateRequestDto;
+
 
 
 @Service
@@ -27,6 +28,8 @@ public class CardServiceImpl implements CardService {
 
     private final CardRepository cardRepository;
     private final UserRepository userRepository;
+    private final CryptoService cryptoService;
+
 
     @Override
     public CardResponseDto createCard(CardCreateRequestDto dto) {
@@ -60,7 +63,7 @@ public class CardServiceImpl implements CardService {
 
     @Override
     public String encryptCardNumber(String rawNumber) {
-        return "ENC(" + rawNumber + ")"; // временная заглушка
+        return cryptoService.encrypt(rawNumber);
     }
 
     @Override
@@ -91,14 +94,11 @@ public class CardServiceImpl implements CardService {
     }
 
     private CardResponseDto toDto(Card card) {
-        // decryptedNumber пока имитируем: берем последние 4 цифры из зашифрованного
-        String fakeDecrypted = card.getCardNumberEncrypted()
-                .replace("ENC(", "")
-                .replace(")", "");
+        String decrypted = cryptoService.decrypt(card.getCardNumberEncrypted());
 
         return new CardResponseDto(
                 card.getId(),
-                maskCard(fakeDecrypted),
+                maskCard(decrypted),
                 card.getCardholderName(),
                 card.getExpiryDate(),
                 card.getStatus(),
